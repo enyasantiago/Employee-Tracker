@@ -122,12 +122,27 @@ function listDepartmentChoices(callback) {
     }
   );
 }
+
 function listRoleChoices(callback) {
   connection.query(
     "SELECT title AS name, id AS value FROM role",
     function (err, res) {
       if (err) throw err;
       callback(res);
+    }
+  );
+}
+function listEmployeeAndRoleChoices(callback) {
+  let employees = []; 
+
+  connection.query(
+    "SELECT CONCAT(first_name, ' ', last_name) AS name, id AS value FROM employee",
+    function (err, res) {
+      if (err) throw err;
+      employees = res; 
+      listRoleChoices(function(roleData){
+      callback(roleData, employees);
+      });
     }
   );
 }
@@ -201,7 +216,7 @@ function orphanRoles(callback) {
 }
 
 function addEmployee() {
-  listRoleChoices(function (roles) {
+  listEmployeeAndRoleChoices(function (roles,employees) {
   inquirer
     .prompt([
       {
@@ -216,9 +231,9 @@ function addEmployee() {
       },
       {
         name: "manager_id",
-        type: "input",
+        type: "list",
         message: "Select Manager",
-        // choices: managers,
+        choices: employees,
       },
       {
         name: "role_id",
