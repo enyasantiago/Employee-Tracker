@@ -1,81 +1,246 @@
 //Dependencies//
-const inquirer = require("inquirer")
-const mysql = require("mysql")
-const cTable = require('console.table');
+const inquirer = require("inquirer");
+const mysql = require("mysql");
+const cTable = require("console.table");
 const Choices = require("inquirer/lib/objects/choices");
 
 const connection = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "@Tuesday12",
-    port: 3306,
-    database: "employee_trackerDB"
-  });
-  
-  connection.connect(function(err) {
-    if (err) throw err
-    listOptions();
+  host: "localhost",
+  user: "root",
+  password: "@Tuesday12",
+  port: 3306,
+  database: "employee_trackerDB",
 });
 
-function listOptions(){
-  inquirer.prompt([
-    {
-      type: "list",
-      message: "What would you like to do?",
-      name: "choice",
-      choices: [ 
-        // * Add departments, roles, employees
-        // * View departments, roles, employee
-        // * Update employee roles
-        "Add Department",
-        "Add Role",
-        "Add Employee",
-        "Add Department",
-        "Add Role",
-        "Add Employees=",
-        "Update Employee Role"
-        
-        // * Update employee managers
-        // * View employees by manager
-        // * * Delete departments, roles, and employees
-        // * * View the total utilized budget of a department -- 
-        // * ie the combined salaries of all employees in that department
+connection.connect(function (err) {
+  if (err) throw err;
+  listOptions();
+});
 
-        // "Update Employee Manager",
-        // "View Employees By Manager",
-        // "Delete Department",
-        // "Delete Role",
-        // "Delete Employee",
-        // "View Total Utilized Budget For Sales",
-        // "View Total Utilized Budget For Engineering",
-        // "View Total Utilized Budget For Finance",
-        // "View Total Utilized Budget For Legal"
+function listOptions() {
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "What would you like to do?",
+        name: "choice",
+        choices: [
+          // * Add departments, roles, employees
+          // * View departments, roles, employee
+          // * Update employee roles
+          "Add Department",
+          "Add Role",
+          "Add Employee",
+          "View Department",
+          "View Role",
+          "View Employees=",
+          "Update Employee Role",
+          "DELETE Role",
 
-      ]
-    }
-  ]).then(function(v){
-    switch (v.choice){
-      case "Add Department":
-        addDepartment()
+          // * Update employee managers
+          // * View employees by manager
+          // * * Delete departments, roles, and employees
+          // * * View the total utilized budget of a department --
+          // * ie the combined salaries of all employees in that department
 
-      case  "Add Role":
-        addRole()
-
-      case  "Add Employee":
-        addEmployee()
-
-      case  "Add Department":
-        addDepartment()
-
-      case  "Add Role":
-        addRole()
-
-      case  "Add Employees=":
-        addEmployees()
-
-      case  "Update Employee Role":
-        updateEmployeeRole()
-
-    }
-  })
+          // "Update Employee Manager",
+          // "View Employees By Manager",
+          // "Delete Department",
+          // "Delete Role",
+          // "Delete Employee",
+          // "View Total Utilized Budget For Sales",
+          // "View Total Utilized Budget For Engineering",
+          // "View Total Utilized Budget For Finance",
+          // "View Total Utilized Budget For Legal"
+        ],
+      },
+    ])
+    .then(function (v) {
+      switch (v.choice) {
+        case "Add Department":
+          addDepartment();
+          break;
+        case "Add Role":
+          addRole();
+          break;
+        case "View Role":
+          viewRoles();
+          break;
+        case "DELETE Role":
+          deleteRole();
+          break;
+        case "Add Employee":
+          addEmployee();
+          break;
+        case "Add Department":
+          addDepartment();
+          break;
+        case "Add Role":
+          addRole();
+          break;
+        case "Add Employees=":
+          addEmployees();
+          break;
+        case "Update Employee Role":
+          updateEmployeeRole();
+          break;
+      }
+    });
 }
+
+function addDepartment() {
+  inquirer
+    .prompt([
+      {
+        name: "name",
+        type: "input",
+        message: "Add department",
+      },
+    ])
+    .then(function (response) {
+      var query = connection.query(
+        "INSERT INTO department SET ? ",
+        {
+          name: response.name,
+        },
+        function (err) {
+          if (err) throw err;
+          console.table(response);
+          listOptions();
+        }
+      );
+    });
+}
+
+
+function listDepartmentChoices(callback) {
+  connection.query(
+    "SELECT name, id AS value FROM department",
+    function (err, res) {
+      if (err) throw err;
+      callback(res);
+    }
+  );
+}
+function listRoleChoices(callback) {
+  connection.query(
+    "SELECT title AS name, id AS value FROM role",
+    function (err, res) {
+      if (err) throw err;
+      callback(res);
+    }
+  );
+}
+function addRole() {
+  listDepartmentChoices(function (departments) {
+    inquirer
+      .prompt([
+        {
+          name: "title",
+          type: "input",
+          message: "Add title",
+        },
+        {
+          name: "salary",
+          type: "input",
+          message: "Add salary",
+          validate: (val) => !isNaN(parseInt(val)),
+        },
+        {
+          name: "department_id",
+          type: "list",
+          message: "Select department",
+          choices: departments,
+        },
+      ])
+      .then(insertRole);
+  });
+}
+function deleteRole() {
+  orphanRoles(function (roles) {
+    if(!roles.length) return listOptions();
+
+    inquirer
+      .prompt({
+        name: "id",
+        type: "list",
+        message: "Select role to DELETE",
+        choices: roles,
+      })
+      .then(removeRole);
+  });
+}
+function insertRole(role) {
+  connection.query("INSERT INTO role SET ? ", role, function (err) {
+    if (err) throw err;
+    listOptions();
+  });
+}
+function removeRole(role) {
+  connection.query("DELETE FROM role WHERE id = ? ", role.id, function (err) {
+    if (err) throw err;
+    listOptions();
+  });
+}
+function viewRoles() {
+  connection.query("SELECT * FROM role", function (err, response) {
+    if (err) throw err;
+    console.table(response);
+    listOptions();
+  });
+}
+function orphanRoles(callback) {
+  let sql = "SELECT id AS value, title AS name FROM role ";
+  sql += "WHERE id NOT IN ";
+  sql += "(SELECT role_id FROM employee)";
+
+  connection.query(sql, function (err, orphans) {
+    if (err) throw err;
+    callback(orphans);
+  });
+}
+
+function addEmployee() {
+  listRoleChoices(function (roles) {
+  inquirer
+    .prompt([
+      {
+        name: "first_name",
+        type: "input",
+        message: "Add First Name",
+      },
+      {
+        name: "last_name",
+        type: "input",
+        message: "Add Last Name",
+      },
+      {
+        name: "manager_id",
+        type: "input",
+        message: "Select Manager",
+        // choices: managers,
+      },
+      {
+        name: "role_id",
+        type: "list",
+        message: "Select Role",
+        choices: roles,
+      },
+    ])
+    .then(insertEmployee);
+  });
+}
+function insertEmployee(employee) {
+  connection.query("INSERT INTO employee SET ? ", employee, function (err) {
+    if (err) throw err;
+    listOptions();
+  });
+}
+
+// addDepartment();
+
+// addRole();
+
+// addEmployees();
+
+// updateEmployeeRole();
