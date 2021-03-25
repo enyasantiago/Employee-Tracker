@@ -255,15 +255,6 @@ function insertEmployee(employee) {
   });
 }
 
-// function viewDepartments(callback) {
-//   connection.query(
-//     "SELECT name, id AS value FROM department",
-//     function (err, res) {
-//       if (err) throw err;
-//       callback(res);
-//     }
-//   );
-// }
 function viewDepartments() {
   connection.query("SELECT * FROM department", function (err, response) {
     if (err) throw err;
@@ -279,6 +270,31 @@ function viewEmployees() {
   });
 }
 
+function updateEmployeeRole(){
+listEmployeeAndRoleChoices(function (roles,employees) {
+  inquirer
+    .prompt([
+      {
+        name: "employee_id",
+        type: "list",
+        message: "Select Employee",
+        choices: employees,
+      },
+      {
+        name: "role_id",
+        type: "list",
+        message: "Select Role",
+        choices: roles,
+      },
+    ])
+    .then(updateEmployee);
+  });
 
+}
 
-// updateEmployeeRole();
+function updateEmployee(employee) {
+  connection.query("UPDATE INTO employee SET WHERE ? ", employee, function (err) {
+    if (err) throw err;
+    listOptions();
+  });
+}
