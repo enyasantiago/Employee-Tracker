@@ -292,8 +292,8 @@ listEmployeeAndRoleChoices(function (roles,employees) {
 
 }
 
-function updateEmployee(employee) {
-  connection.query("UPDATE INTO employee SET WHERE ? ", employee, function (err) {
+function updateEmployee(employee, role) {
+  connection.query("UPDATE employee SET role_id = ? WHERE id = ?", [employee.role_id,employee.employee_id], function (err) {
     if (err) throw err;
     listOptions();
   });
