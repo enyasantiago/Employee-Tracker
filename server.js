@@ -28,14 +28,14 @@ function listOptions() {
           // * Add departments, roles, employees
           // * View departments, roles, employee
           // * Update employee roles
+          "View Departments",
           "Add Department",
-          "Add Role",
-          "Add Employee",
-          "View Department",
           "View Role",
-          "View Employees=",
-          "Update Employee Role",
+          "Add Role",
           "DELETE Role",
+          "View Employees",
+          "Add Employee",
+          "Update Employee Role",
 
           // * Update employee managers
           // * View employees by manager
@@ -60,6 +60,9 @@ function listOptions() {
         case "Add Department":
           addDepartment();
           break;
+        case "View Departments":
+          viewDepartments();
+          break;   
         case "Add Role":
           addRole();
           break;
@@ -72,14 +75,14 @@ function listOptions() {
         case "Add Employee":
           addEmployee();
           break;
-        case "Add Department":
+        case "Add Departments":
           addDepartment();
           break;
         case "Add Role":
           addRole();
           break;
-        case "Add Employees=":
-          addEmployees();
+        case "View Employees":
+          viewEmployees();
           break;
         case "Update Employee Role":
           updateEmployeeRole();
@@ -252,10 +255,30 @@ function insertEmployee(employee) {
   });
 }
 
-// addDepartment();
+// function viewDepartments(callback) {
+//   connection.query(
+//     "SELECT name, id AS value FROM department",
+//     function (err, res) {
+//       if (err) throw err;
+//       callback(res);
+//     }
+//   );
+// }
+function viewDepartments() {
+  connection.query("SELECT * FROM department", function (err, response) {
+    if (err) throw err;
+    console.table(response);
+    listOptions();
+  });
+}
+function viewEmployees() {
+  connection.query("SELECT * FROM employee", function (err, response) {
+    if (err) throw err;
+    console.table(response);
+    listOptions();
+  });
+}
 
-// addRole();
 
-// addEmployees();
 
 // updateEmployeeRole();
