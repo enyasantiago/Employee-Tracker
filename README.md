@@ -9,6 +9,8 @@ This is a command-line application that allows the user to:
 
   * Update employee roles
 
+![employeeTracker](https://user-images.githubusercontent.com/15931465/114105838-8a258680-989b-11eb-818b-c52deb054f53.gif)
+
 ## Database schema
 
 ![Database Schema](Assets/schema.png)
